@@ -22,7 +22,7 @@ function SearchBar({ setopeningSearchBar, setSelectedLocation }) {
       lat: parseFloat(place.lat),
       lon: parseFloat(place.lon),
     });
-
+    localStorage.setItem("recent location", 'something to written here');
     setopeningSearchBar(false);
   };
 
@@ -34,7 +34,7 @@ function SearchBar({ setopeningSearchBar, setSelectedLocation }) {
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.5 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="bg-white overflow-auto h-[600px]  p-4 rounded"
+          className="bg-white overflow-auto w-full sm:w-auto h-screen sm:h-[600px] p-4 sm:rounded"
         >
           <div className="flex items-center justify-between">
             <p className="text-2xl text-[#333333] font-bold">
@@ -44,6 +44,7 @@ function SearchBar({ setopeningSearchBar, setSelectedLocation }) {
               <RxCross2 size={30} />
             </button>
           </div>
+          <p>Recent locations:</p>
 
           <div className="flex my-4 items-start w-full space-x-2">
             <input
@@ -54,7 +55,7 @@ function SearchBar({ setopeningSearchBar, setSelectedLocation }) {
                 fetchLocations(e.target.value);
               }}
               placeholder="Search Locations"
-              className="border border-gray-400 rounded-full py-1 px-3 w-96"
+              className="border border-gray-400 rounded-full py-1 px-3 w-full sm:w-96"
             />
             <button
               onClick={() => setopeningSearchBar(false)}
@@ -67,7 +68,7 @@ function SearchBar({ setopeningSearchBar, setSelectedLocation }) {
           </div>
 
           {suggestions.length > 0 && (
-            <ul className="mt-2 border rounded-lg bg-white shadow-lg w-80">
+            <ul className="mt-2 border rounded-lg bg-white shadow-lg ">
               {suggestions.map((place) => (
                 <li
                   key={place.place_id}
