@@ -22,7 +22,7 @@ function SearchBar({ setopeningSearchBar, setSelectedLocation }) {
       lat: parseFloat(place.lat),
       lon: parseFloat(place.lon),
     });
-
+    localStorage.setItem("recent location", 'something to written here');
     setopeningSearchBar(false);
   };
 
@@ -44,6 +44,7 @@ function SearchBar({ setopeningSearchBar, setSelectedLocation }) {
               <RxCross2 size={30} />
             </button>
           </div>
+          <p>Recent locations:</p>
 
           <div className="flex my-4 items-start w-full space-x-2">
             <input
