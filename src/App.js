@@ -28,6 +28,27 @@ function App() {
     lon: 72.8777,
   });
 
+  const handleCurrentLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setSelectedLocation({
+            name: "Your Current Location",
+            lat: latitude,
+            lon: longitude,
+          });
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+        }
+      );
+    } else {
+      alert("Geolocation is not supported by this browser.");
+    }
+  };
+  
+
   const handleSelect = (place) => {
     setSelectedLocation({
       name: place.display_name,
@@ -35,7 +56,6 @@ function App() {
       lon: parseFloat(place.lon),
     });
     localStorage.setItem("recent location", "something to written here");
-    // setOpeningSearchBar(false);
   };
 
   const fetchLocations = async (input) => {
@@ -66,7 +86,9 @@ function App() {
         </button>
       </div>
       <div className="flex justify-end">
-        <button className="absolute m-7  bg-white p-2 z-10 rounded-full bottom-0">
+        <button 
+        onClick={handleCurrentLocation}
+        className="absolute m-7  bg-white p-2 z-10 rounded-full bottom-0">
           <MdLocationPin size={30} />
         </button>
       </div>
