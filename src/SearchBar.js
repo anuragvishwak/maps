@@ -4,15 +4,19 @@ import { RxCross2 } from "react-icons/rx";
 import { AnimatePresence, motion } from "framer-motion";
 
 function SearchBar({
-  setopeningSearchBar,
+  setSourceCoords,
+  setDestinationCoords,
+  setopeningSearchBar, 
   setQuery,
-  suggestions,
+  sourceCoords,
+  destinationCoords,
   selectedLocation,
 }) {
-  const [source, setSource] = useState(selectedLocation.name || "");
-  const [destination, setdestination] = useState(selectedLocation.name || "");
+  const [source, setSource] = useState(selectedLocation?.name || "");
+  const [destination, setdestination] = useState(selectedLocation?.name || "");
   const [sourceSuggestions, setSourceSuggestions] = useState([]);
   const [destinationSuggestions, setDestinationSuggestions] = useState([]);
+
 
   const fetchLocations = async (input, field) => {
     if (!input) {
@@ -63,12 +67,39 @@ function SearchBar({
     }
   };
 
+  const calculateDistance = (sourceCoords, destinationCoords) => {
+    if (!sourceCoords || !destinationCoords) return null;
+
+    const R = 6371;
+    const dLat = ((destinationCoords.lat - sourceCoords.lat) * Math.PI) / 180;
+    const dLon = ((destinationCoords.lon - sourceCoords.lon) * Math.PI) / 180;
+
+    const lat1 = (sourceCoords.lat * Math.PI) / 180;
+    const lat2 = (destinationCoords.lat * Math.PI) / 180;
+
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c;
+
+    return distance.toFixed(2);
+  };
+
   const handleSelect = (place, field) => {
+    const coords = {
+      lat: parseFloat(place.lat),
+      lon: parseFloat(place.lon),
+    };
+
     if (field === "source") {
       setSource(place.display_name);
+      setSourceCoords(coords);
       setSourceSuggestions([]);
     } else if (field === "destination") {
       setdestination(place.display_name);
+      setDestinationCoords(coords);
     }
   };
 
@@ -77,8 +108,8 @@ function SearchBar({
   }, []);
 
   useEffect(() => {
-    setSource(selectedLocation.name || "");
-    setdestination(selectedLocation.name || "");
+    setSource(selectedLocation?.name || "");
+    setdestination(selectedLocation?.name || "");
   }, [selectedLocation]);
 
   return (
@@ -101,59 +132,70 @@ function SearchBar({
           </button>
         </div>
 
-       <div className="sm:flex sm:space-x-3 w-full">
-       <div className="w-full">
-          <input
-            value={source}
-            onChange={(e) => {
-              const value = e.target.value;
-              setSource(value);
-              setQuery(value);
-              fetchLocations(value, "source");
-            }}
-            placeholder="Source"
-            className="border mb-2 sm:mb-0 font-semibold px-2.5 py-1.5 rounded w-full border-gray-400"
+        <div className="sm:flex sm:space-x-3 w-full">
+          <div className="w-full">
+            <input
+              value={source}
+              onChange={(e) => {
+                const value = e.target.value;
+                setSource(value);
+                setQuery(value);
+                fetchLocations(value, "source");
+              }}
+              placeholder="Source"
+              className="border mb-2 sm:mb-0 font-semibold px-2.5 py-1.5 rounded w-full border-gray-400"
+            />
+
+            <ul>
+              {sourceSuggestions.map((place) => (
+                <li
+                  key={place.place_id}
+                  onClick={() => handleSelect(place, "source")}
+                >
+                  {place.display_name}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <FaArrowRightArrowLeft
+            className="text-[#333333] hidden sm:block mt-2"
+            size={30}
           />
 
-          <ul>
-            {sourceSuggestions.map((place) => (
-              <li
-                key={place.place_id}
-                onClick={() => handleSelect(place, "source")}
-              >
-                {place.display_name}
-              </li>
-            ))}
-          </ul>
+          <div className="w-full">
+            <input
+              value={destination}
+              onChange={(e) => {
+                const value = e.target.value;
+                setdestination(value);
+                setQuery(value);
+                fetchLocations(value, "destination");
+              }}
+              placeholder="Destination"
+              className="border font-semibold px-2.5 py-1.5 rounded w-full border-gray-400"
+            />
+
+            <ul>
+              {destinationSuggestions.map((place) => (
+                <li
+                  key={place.place_id}
+                  onClick={() => handleSelect(place, "destination")}
+                >
+                  {place.display_name}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
-
-        <FaArrowRightArrowLeft className="text-[#333333] hidden sm:block mt-2" size={30} />
-
-        <div className="w-full">
-          <input
-            value={destination}
-            onChange={(e) => {
-              const value = e.target.value;
-              setdestination(value);
-              setQuery(value);
-              fetchLocations(value, "destination");
-            }}
-            placeholder="Destination"
-            className="border font-semibold px-2.5 py-1.5 rounded w-full border-gray-400"
-          />
-
-          <ul>
-            {destinationSuggestions.map((place) => (
-              <li
-                key={place.place_id}
-                onClick={() => handleSelect(place, "destination")}
-              >
-                {place.display_name}
-              </li>
-            ))}
-          </ul>
-        </div>
-       </div>
+        <div className="mt-4 text-center text-lg font-semibold">
+            {sourceCoords && destinationCoords && (
+              <p>
+                Distance: {calculateDistance(sourceCoords, destinationCoords)}{" "}
+                km
+              </p>
+            )}
+          </div>
       </motion.div>
     </AnimatePresence>
   );

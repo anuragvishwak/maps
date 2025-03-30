@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FaSearchLocation } from "react-icons/fa";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -8,6 +8,7 @@ import { MdLocationPin } from "react-icons/md";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import MapController from "./MapController";
+import { Polyline } from "react-leaflet";
 
 const customIcon = new L.Icon({
   iconUrl: markerIcon,
@@ -20,13 +21,11 @@ const customIcon = new L.Icon({
 function App() {
   const [openingSearchBar, setOpeningSearchBar] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
-  // const [suggestionBox, setsuggestionBox] = useState(false);
   const [query, setQuery] = useState("");
-  const [selectedLocation, setSelectedLocation] = useState({
-    name: "Mumbai, India",
-    lat: 19.076,
-    lon: 72.8777,
-  });
+  const [sourceCoords, setSourceCoords] = useState(null);
+  const [destinationCoords, setDestinationCoords] = useState(null);
+  const [selectedLocation, setSelectedLocation] = useState(null);
+
 
   const handleCurrentLocation = () => {
     if (navigator.geolocation) {
@@ -47,7 +46,6 @@ function App() {
       alert("Geolocation is not supported by this browser.");
     }
   };
-  
 
   const handleSelect = (place) => {
     setSelectedLocation({
@@ -66,6 +64,14 @@ function App() {
     const data = await response.json();
     setSuggestions(data);
   };
+
+  useEffect(() => {
+    if (sourceCoords && destinationCoords) {
+      if (window.innerWidth < 768) {
+        setOpeningSearchBar(false);
+      }
+    }
+  }, [sourceCoords, destinationCoords]);
 
   return (
     <div className="">
@@ -86,9 +92,10 @@ function App() {
         </button>
       </div>
       <div className="flex justify-end">
-        <button 
-        onClick={handleCurrentLocation}
-        className="absolute m-7  bg-white p-2 z-10 rounded-full bottom-0">
+        <button
+          onClick={handleCurrentLocation}
+          className="absolute m-7  bg-white p-2 z-10 rounded-full bottom-0"
+        >
           <MdLocationPin size={30} />
         </button>
       </div>
@@ -114,9 +121,9 @@ function App() {
       </div>
 
       <MapContainer
-        setSuggestions={setSuggestions}
-        center={[selectedLocation.lat, selectedLocation.lon]}
-        zoom={13}
+          center={selectedLocation ? [selectedLocation.lat, selectedLocation.lon] : [20, 0]} 
+          zoom={selectedLocation ? 13 : 2} // Zoom out initially
+        
         zoomControl={false}
         className="h-screen z-0 w-full"
       >
@@ -124,16 +131,49 @@ function App() {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
-        <Marker
-          position={[selectedLocation.lat, selectedLocation.lon]}
-          icon={customIcon}
-        >
-          <Popup>{selectedLocation.name}</Popup>
-        </Marker>
+
+{selectedLocation && selectedLocation.lat && selectedLocation.lon && (
+  <Marker position={[selectedLocation.lat, selectedLocation.lon]} icon={customIcon}>
+    <Popup>{selectedLocation.name || "Selected Location"}</Popup>
+  </Marker>
+)}
+
+
+        {sourceCoords && (
+          <Marker
+            position={[sourceCoords.lat, sourceCoords.lon]}
+            icon={customIcon}
+          >
+            <Popup>Source: {sourceCoords.name || "Selected Source"}</Popup>
+          </Marker>
+        )}
+
+        {destinationCoords && (
+          <Marker
+            position={[destinationCoords.lat, destinationCoords.lon]}
+            icon={customIcon}
+          >
+            <Popup>
+              Destination: {destinationCoords.name || "Selected Destination"}
+            </Popup>
+          </Marker>
+        )}
+
+        {sourceCoords && destinationCoords && (
+          <Polyline
+            positions={[
+              [sourceCoords.lat, sourceCoords.lon],
+              [destinationCoords.lat, destinationCoords.lon],
+            ]}
+            color="blue"
+          />
+        )}
 
         <MapController
           selectedLocation={selectedLocation}
           setSuggestions={setSuggestions}
+          sourceCoords={sourceCoords}
+          destinationCoords={destinationCoords}
         />
       </MapContainer>
 
@@ -147,6 +187,10 @@ function App() {
           query={query}
           setQuery={setQuery}
           fetchLocations={fetchLocations}
+          setSourceCoords={setSourceCoords}
+          setDestinationCoords={setDestinationCoords}
+          sourceCoords={sourceCoords}
+          destinationCoords={destinationCoords}
         />
       )}
     </div>
